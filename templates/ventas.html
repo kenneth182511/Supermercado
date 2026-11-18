@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Supermercado Express - Sistema POS Avanzado</title>
+    <style>
+        :root { 
+            --primary: #2563eb; --primary-dark: #1d4ed8; 
+            --dark: #1e293b; --light: #f1f5f9; --success: #16a34a; 
+            --card-bg: #ffffff; --text-color: #0f172a; --border-color: #e2e8f0; 
+        }
+        
+        .theme-dark { 
+            --light: #090d16; --card-bg: #1e293b; --text-color: #f8fafc; 
+            --dark: #f8fafc; --border-color: #334155; 
+        }
+
+        .theme-neon { 
+            --light: #05050a; --card-bg: #12121f; --text-color: #00ffcc; 
+            --dark: #00ffcc; --border-color: #ff007f; --primary: #ff007f; --primary-dark: #cc0064; --success: #00ff66;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--light); color: var(--text-color); margin: 0; padding: 25px; transition: background 0.3s, color 0.3s; }
+        
+        .main-container { max-width: 1350px; margin: auto; display: grid; grid-template-columns: 1fr 390px; gap: 25px; }
+        @media (max-width: 1000px) { .main-container { grid-template-columns: 1fr; } }
+
+        .catalog-section, .cart-section, .history-section { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.06); transition: all 0.3s; }
+        .cart-section { height: fit-content; position: sticky; top: 25px; }
+
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
+        .brand { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
+        .back-btn { color: #64748b; text-decoration: none; font-weight: 600; font-size: 14px; }
+        .back-btn:hover { color: var(--text-color); }
+        
+        .theme-select { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700; outline: none; }
+
+        .add-prod-box { background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .add-prod-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+        .add-prod-box input, .add-prod-box select { padding: 9px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; background: var(--card-bg); color: var(--text-color); outline: none; }
+        .btn-add-prod { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; grid-column: span 2; }
+        .btn-add-prod:hover { background: var(--primary-dark); }
+
+        .search-box { width: 100%; padding: 12px 18px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 14px; box-sizing: border-box; outline: none; background: var(--card-bg); color: var(--text-color); }
+        
+        .catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; margin-bottom: 30px; }
+        .product-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; position: relative; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        
+        .stock-alert { background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; display: inline-block; margin-bottom: 6px; }
+        .product-category { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #94a3b8; margin-bottom: 5px; }
+        .product-name { font-size: 16px; font-weight: 700; margin: 0 0 6px 0; }
+        .product-price { font-size: 18px; color: var(--success); font-weight: 800; margin-bottom: 6px; }
+        .product-stock { font-size: 12px; color: #64748b; margin-bottom: 12px; }
+        
+        .add-cart-btn { background: var(--primary); color: white; border: none; padding: 9px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 13px; transition: background 0.2s; }
+        .add-cart-btn:hover { background: var(--primary-dark); }
+
+        .edit-section { background: rgba(0,0,0,0.02); border-top: 1px dashed var(--border-color); margin-top: 12px; padding-top: 10px; }
+        .edit-toggle { background: none; border: none; color: var(--primary); font-size: 12px; font-weight: bold; cursor: pointer; padding: 0; margin-bottom: 6px; }
+        .edit-form { display: none; margin-top: 6px; }
+        .edit-form input { width: 100%; padding: 7px; margin-bottom: 6px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px; box-sizing: border-box; background: var(--card-bg); color: var(--text-color); }
+        .btn-update { background: var(--primary); color: white; border: none; padding: 6px; width: 100%; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+        .cart-title { font-size: 18px; font-weight: 700; margin-top: 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .cart-items { max-height: 220px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
+        
+        .checkout-form label { font-size: 12px; font-weight: 700; color: #64748b; display: block; margin-bottom: 4px; }
+        .checkout-form select { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; background: var(--card-bg); color: var(--text-color); outline: none; }
+        .total-box { display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; margin: 15px 0; padding-top: 10px; border-top: 2px dashed var(--border-color); }
+        .checkout-btn { background: var(--success); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; transition: background 0.2s; }
+        .checkout-btn:hover { background: #15803d; }
+
+        .history-section { grid-column: span 2; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid var(--border-color); padding: 12px; text-align: left; font-size: 13px; }
+        th { background-color: rgba(0,0,0,0.02); font-weight: 700; text-transform: uppercase; font-size: 11px; color: #64748b; }
+        .btn-print { background: #0284c7; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 700; cursor: pointer; border: none; }
+        .btn-print:hover { background: #0369a1; }
+
+        #toast { position: fixed; bottom: 30px; right: 30px; background: #16a34a; color: white; padding: 14px 22px; border-radius: 10px; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; z-index: 1000; animation: slideUp 0.3s ease; }
+        #toast.error { background: #dc2626; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- CATÁLOGO -->
+        <div class="catalog-section">
+            <div class="header-flex">
+                <div class="brand">🛒 Supermercado Express - POS</div>
+                <div class="nav-actions">
+                    <select id="themeSelector" class="theme-select" onchange="changeTheme()">
+                        <option value="theme-light">☀️ Modo Claro</option>
+                        <option value="theme-dark">🌙 Modo Oscuro</option>
+                        <option value="theme-neon">⚡ Cyberpunk Neon</option>
+                    </select>
+                    <a href="/menu" class="back-btn">← Volver al Panel</a>
+                </div>
+            </div>
+
+            <div class="add-prod-box">
+                <h4 style="margin: 0 0 10px 0; font-size: 14px;">➕ Registrar Nuevo Producto</h4>
+                <form action="/producto/agregar" method="POST" class="add-prod-grid" onsubmit="return validateNewProduct(event)">
+                    <input type="text" name="nombre" required placeholder="Nombre">
+                    <input type="number" id="newPrice" name="precio" required placeholder="Precio ($)" step="0.01" min="0" max="15000000">
+                    <input type="text" name="categoria" required placeholder="Categoría">
+                    <input type="number" id="newStock" name="cantidad_inicial" required placeholder="Stock inicial" min="0" max="99999">
+                    <input type="text" name="ubicacion" required placeholder="Pasillo">
+                    <button type="submit" class="btn-add-prod">Añadir al Inventario</button>
+                </form>
+            </div>
+
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar productos en el catálogo..." onkeyup="filterProducts()">
+
+            <div class="catalog-grid" id="productContainer">
+                {% for prod in productos %}
+                <div class="product-card" data-name="{{ prod.nombre | lower }}">
+                    <div>
+                        <div class="product-category">{{ prod.categoria }}</div>
+                        {% if prod.cantidad_actual <= 5 %}
+                            <div class="stock-alert">⚠️ ¡Stock crítico: {{ prod.cantidad_actual }} u.!</div>
+                        {% endif %}
+                        <div class="product-name">{{ prod.nombre }}</div>
+                        <div class="product-price">${{ "{:,.0f}".format(prod.precio) }}</div>
+                        <div class="product-stock">Stock actual: <strong>{{ prod.cantidad_actual }} u.</strong></div>
+                    </div>
+                    
+                    <button type="button" class="add-cart-btn" onclick="addToCart('{{ prod.id_producto }}', '{{ prod.nombre }}', {{ prod.precio }}, {{ prod.cantidad_actual }})">+ Seleccionar</button>
+
+                    <div class="edit-section">
+                        <button type="button" class="edit-toggle" onclick="toggleEdit('form-{{ prod.id_producto }}')">⚙️ Editar / Reabastecer</button>
+                        <form action="/producto/actualizar" method="POST" id="form-{{ prod.id_producto }}" class="edit-form" onsubmit="return validateUpdateProduct(event, 'price-{{ prod.id_producto }}', 'stock-extra-{{ prod.id_producto }}', {{ prod.cantidad_actual }})">
+                            <input type="hidden" name="id_producto" value="{{ prod.id_producto }}">
+                            <input type="number" id="price-{{ prod.id_producto }}" name="precio" value="{{ prod.precio }}" step="0.01" min="0" max="15000000" required placeholder="Nuevo precio">
+                            <input type="number" id="stock-extra-{{ prod.id_producto }}" name="stock_extra" value="0" min="0" max="99999" required placeholder="Sumar stock">
+                            <button type="submit" class="btn-update">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- CARRITO -->
+        <div class="cart-section">
+            <h3 class="cart-title">🛍️ Carrito POS <span id="cartCount" style="background:var(--primary); color:white; font-size:12px; padding:2px 8px; border-radius:10px;">0</span></h3>
+            
+            <form action="/ventas" method="POST" class="checkout-form" onsubmit="return validateCheckout()">
+                <div class="cart-items" id="cartItemsList">
+                    <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 20px 0;">Ningún producto seleccionado.</p>
+                </div>
+
+                <input type="hidden" name="id_producto" id="formProductId">
+                <input type="hidden" name="cantidad" id="formQuantity" value="1">
+
+                <label>Seleccionar Cliente:</label>
+                <select name="id_cliente" required>
+                    <option value="">-- Elige un Cliente --</option>
+                    {% for cli in clientes %}
+                        <option value="{{ cli.id_cliente }}">{{ cli.nombre }}</option>
+                    {% endfor %}
+                </select>
+
+                <div class="total-box">
+                    <span>Total:</span>
+                    <span id="cartTotal" style="color: var(--success);">$0</span>
+                </div>
+
+                <button type="submit" class="checkout-btn">Emitir Factura Electrónica</button>
+            </form>
+        </div>
+
+        <!-- HISTORIAL Y BUSCADOR DE FACTURAS -->
+        <div class="history-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin:0;">📋 Historial de Facturas Emitidas</h3>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <a href="/exportar-ventas" class="btn-print" style="background: var(--success); padding: 8px 14px; border-radius: 8px; text-decoration:none; font-size: 12px;">📊 Descargar Cierre de Caja (CSV)</a>
+                    <input type="text" id="searchHistory" class="search-box" style="width: 220px; margin:0;" placeholder="🔍 Filtrar facturas..." onkeyup="filterHistory()">
+                </div>
+            </div>
+            <table id="historyTable">
+                <tr>
+                    <th>Código Factura</th><th>Cliente</th><th>Vendedor</th><th>Fecha</th><th>Total</th><th>Acción</th>
+                </tr>
+                {% for f in facturas %}
+                <tr class="history-row" data-text="{{ f.codigo_factura | lower }} {{ f.cliente | lower }}">
+                    <td><strong>{{ f.codigo_factura }}</strong></td>
+                    <td>{{ f.cliente }}</td>
+                    <td>{{ f.vendedor }}</td>
+                    <td>{{ f.fecha_venta }}</td>
+                    <td style="color: var(--success); font-weight: bold;">${{ "{:,.0f}".format(f.total) }}</td>
+                    <td>
+                        <button type="button" class="btn-print" onclick="printReceipt('{{ f.codigo_factura }}', '{{ f.cliente }}', '{{ f.vendedor }}', '{{ f.fecha_venta }}', '{{ f.total }}')">🖨️ Imprimir</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div id="toast">¡Operación exitosa!</div>
+
+    <script>
+        let currentCartItem = null;
+
+        function addToCart(id, name, price, stock) {
+            currentCartItem = { id, name, price, stock };
+            document.getElementById('formProductId').value = id;
+            document.getElementById('formQuantity').value = 1;
+            
+            let cartHTML = `
+                <div class="cart-item">
+                    <div>
+                        <strong>${name}</strong><br>
+                        <small>$${price.toLocaleString()} c/u</small>
+                    </div>
+                    <div>
+                        <input type="number" id="cartQtyInput" min="1" max="${stock}" value="1" style="width: 50px; padding: 4px; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);" onchange="updateTotal(${price})">
+                    </div>
+                </div>
+            `;
+            document.getElementById('cartItemsList').innerHTML = cartHTML;
+            document.getElementById('cartCount').innerText = "1";
+            updateTotal(price);
+            showToast("Producto agregado al carrito", false);
+        }
+
+        function updateTotal(price) {
+            let qty = parseInt(document.getElementById('cartQtyInput').value) || 1;
+            document.getElementById('formQuantity').value = qty;
+            let total = price * qty;
+            document.getElementById('cartTotal').innerText = "$" + total.toLocaleString();
+        }
+
+        function validateCheckout() {
+            if (!currentCartItem) {
+                showToast("⚠️ Selecciona un producto para la venta.", true);
+                return false;
+            }
+            let qty = parseInt(document.getElementById('cartQtyInput').value) || 1;
+            let totalVenta = currentCartItem.price * qty;
+
+            if (totalVenta > 99000000) {
+                showToast("❌ Error: El total de la factura no puede superar $99,000,000.", true);
+                return false;
+            }
+
+            showToast("¡Venta procesada y factura generada!", false);
+            return true;
+        }
+
+        function validateNewProduct(event) {
+            let price = parseFloat(document.getElementById('newPrice').value);
+            let stock = parseInt(document.getElementById('newStock').value);
+
+            if (price > 15000000 || price < 0) {
+                showToast("❌ Error: El precio máximo por producto es de $15,000,000.", true);
+                event.preventDefault();
+                return false;
+            }
+            if (stock > 99999 || stock < 0) {
+                showToast("❌ Error: El stock no puede superar las 99,999 unidades.", true);
+                event.preventDefault();
+                return false;
+            }
+            showToast("¡Producto registrado con éxito!", false);
+            return true;
+        }
+
+        function validateUpdateProduct(event, priceId, stockId, currentStock) {
+            let price = parseFloat(document.getElementById(priceId).value);
+            let stockExtra = parseInt(document.getElementById(stockId).value);
+
+            if (price > 15000000 || price < 0) {
+                showToast("❌ Error: El precio máximo por producto es de $15,000,000.", true);
+                event.preventDefault();
+                return false;
+            }
+            if ((currentStock + stockExtra) > 99999) {
+                showToast(`❌ Error: El stock total acumulado supera 99,999 (Actual: ${currentStock}).`, true);
+                event.preventDefault();
+                return false;
+            }
+            showToast("¡Inventario actualizado con éxito!", false);
+            return true;
+        }
+
+        function showToast(message, isError = false) {
+            let toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = isError ? 'error' : '';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+
+        function changeTheme() {
+            let theme = document.getElementById('themeSelector').value;
+            document.body.className = theme === 'theme-light' ? '' : theme;
+            localStorage.setItem('selectedTheme', theme);
+        }
+
+        let savedTheme = localStorage.getItem('selectedTheme') || 'theme-light';
+        document.getElementById('themeSelector').value = savedTheme;
+        document.body.className = savedTheme === 'theme-light' ? '' : savedTheme;
+
+        function printReceipt(codigo, cliente, vendedor, fecha, total) {
+            let receiptWindow = window.open('', '', 'width=400,height=600');
+            receiptWindow.document.write(`
+                <html>
+                <head><title>Recibo - ${codigo}</title>
+                <style>body { font-family: monospace; width: 300px; margin: auto; padding: 10px; font-size: 12px; }</style>
+                </head>
+                <body>
+                    <h3 style="text-align:center;">SUPERMERCADO EXPRESS</h3>
+                    <p style="text-align:center;">Factura: ${codigo}</p>
+                    <hr>
+                    <p>Fecha: ${fecha}</p>
+                    <p>Cliente: ${cliente}</p>
+                    <p>Vendedor: ${vendedor}</p>
+                    <hr>
+                    <p><strong>TOTAL: $${Number(total).toLocaleString()}</strong></p>
+                    <hr>
+                    <p style="text-align:center;">¡Gracias por su compra!</p>
+                </body>
+                </html>
+            `);
+            receiptWindow.document.close();
+            receiptWindow.print();
+        }
+
+        function filterProducts() {
+            let input = document.getElementById('searchInput').value.toLowerCase();
+            let cards = document.getElementsByClassName('product-card');
+            for (let card of cards) {
+                let name = card.getAttribute('data-name');
+                card.style.display = name.includes(input) ? "" : "none";
+            }
+        }
+
+        function filterHistory() {
+            let input = document.getElementById('searchHistory').value.toLowerCase();
+            let rows = document.getElementsByClassName('history-row');
+            for (let row of rows) {
+                let text = row.getAttribute('data-text');
+                row.style.display = text.includes(input) ? "" : "none";
+            }
+        }
+
+        function toggleEdit(formId) {
+            let form = document.getElementById(formId);
+            form.style.display = form.style.display === "block" ? "none" : "block";
+        }
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.keyCode == 123 || (event.ctrlKey && event.shiftKey && (event.keyCode == 73 || event.keyCode == 74)) || (event.ctrlKey && event.keyCode == 85)) {
+                event.preventDefault();
+                alert("¡Acción bloqueada por políticas de seguridad del proyecto!");
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

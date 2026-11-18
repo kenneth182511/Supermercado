@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Corporativo - Supermercado Express POS</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-main: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --input-bg: #f8fafc;
+            --brand-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #0284c7 100%);
+        }
+
+        .theme-dark {
+            --bg-main: #090d16;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --brand-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+        }
+
+        .theme-neon {
+            --primary: #ff007f;
+            --primary-dark: #cc0064;
+            --bg-main: #05050a;
+            --card-bg: #12121f;
+            --text-main: #00ffcc;
+            --text-muted: #a855f7;
+            --border-color: #ff007f;
+            --input-bg: #090912;
+            --brand-gradient: linear-gradient(135deg, #120428 0%, #4c0519 100%);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .login-wrapper {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            max-width: 920px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .login-wrapper { grid-template-columns: 1fr; }
+            .brand-side { display: none; }
+        }
+
+        /* Lado Izquierdo: Panel Visual Corporativo */
+        .brand-side {
+            background: var(--brand-gradient);
+            color: white;
+            padding: 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            width: fit-content;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-content h1 {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 15px;
+        }
+
+        .brand-content p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .feature-list li {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .feature-icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .brand-footer {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Lado Derecho: Formulario de Acceso */
+        .form-side {
+            padding: 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            margin-bottom: 30px;
+        }
+
+        .form-header h2 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .form-header p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .error-alert {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            color: #b91c1c;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .toggle-pass {
+            position: absolute;
+            right: 14px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn-login:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .security-note {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <!-- PANEL IZQUIERDO CORPORATIVO -->
+        <div class="brand-side">
+            <div class="brand-badge">⚡ SISTEMA ERP & POS v2.6</div>
+            
+            <div class="brand-content">
+                <h1>Supermercado Express</h1>
+                <p>Plataforma integral para el control de inventarios, facturación electrónica en tiempo real y gestión comercial.</p>
+                
+                <ul class="feature-list">
+                    <li><span class="feature-icon">✓</span> Control de stock e inventario automatizado</li>
+                    <li><span class="feature-icon">✓</span> Analítica financiera y reportes dinámicos</li>
+                    <li><span class="feature-icon">✓</span> Seguridad basada en roles y auditoría</li>
+                </ul>
+            </div>
+
+            <div class="brand-footer">
+                © 2026 Supermercado Express • Entorno Protegido
+            </div>
+        </div>
+
+        <!-- PANEL DERECHO FORMULARIO -->
+        <div class="form-side">
+            <div class="form-header">
+                <h2>Iniciar Sesión</h2>
+                <p>Ingresa tus credenciales corporativas para acceder al panel</p>
+            </div>
+
+            {% if error %}
+            <div class="error-alert">
+                <span>⚠️</span> {{ error }}
+            </div>
+            {% endif %}
+
+            <form action="/" method="POST" onsubmit="handleSubmit()">
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <div class="input-wrapper">
+                        <input type="email" name="email" required placeholder="usuario@supermercado.com" autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="passwordInput" name="contraseña" required placeholder="••••••••">
+                        <button type="button" class="toggle-pass" onclick="togglePassword()" title="Mostrar/Ocultar contraseña">👁️</button>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-login">Ingresar al Sistema →</button>
+            </form>
+
+            <div class="security-note">
+                🔒 Conexión encriptada y monitoreada por políticas de seguridad
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Aplicar el tema guardado si el usuario ya eligió uno en el sistema
+        let savedTheme = localStorage.getItem('selectedTheme') || 'theme-light';
+        if (savedTheme !== 'theme-light') {
+            document.body.className = savedTheme;
+        }
+
+        function togglePassword() {
+            const passInput = document.getElementById('passwordInput');
+            passInput.type = passInput.type === 'password' ? 'text' : 'password';
+        }
+
+        function handleSubmit() {
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = 'Verificando credenciales...';
+            btn.style.opacity = '0.8';
+        }
+
+        // Seguridad estricta del proyecto
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.keyCode == 123 || (event.ctrlKey && event.shiftKey && (event.keyCode == 73 || event.keyCode == 74)) || (event.ctrlKey && event.keyCode == 85)) {
+                event.preventDefault();
+                alert("¡Acción bloqueada por políticas de seguridad del proyecto!");
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

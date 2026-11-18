@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Módulo de Clientes (CRM) - Supermercado PRO</title>
+    <style>
+        :root { 
+            --primary: #3b82f6; --primary-dark: #1d4ed8; 
+            --dark: #1e293b; --light: #f8fafc; --success: #16a34a; 
+            --danger: #dc2626; --card-bg: #ffffff; --text-color: #1e293b; --border-color: #e2e8f0; 
+        }
+
+        .theme-dark { 
+            --light: #0f172a; --card-bg: #1e293b; --text-color: #f8fafc; 
+            --dark: #f8fafc; --border-color: #334155; 
+        }
+
+        .theme-neon { 
+            --light: #05050a; --card-bg: #12121f; --text-color: #00ffcc; 
+            --dark: #00ffcc; --border-color: #ff007f; --primary: #ff007f; --primary-dark: #cc0064; --success: #00ff66;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--light); color: var(--text-color); margin: 0; padding: 25px; transition: background 0.3s, color 0.3s; }
+        
+        .main-container { max-width: 1200px; margin: auto; display: flex; flex-direction: column; gap: 25px; }
+
+        .header-section { background: var(--card-bg); padding: 20px 25px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        .brand-title { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; margin: 0; }
+        .nav-actions { display: flex; gap: 12px; align-items: center; }
+        .back-btn { color: #64748b; text-decoration: none; font-weight: 600; font-size: 14px; }
+        .back-btn:hover { color: var(--text-color); }
+        
+        .theme-select { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700; outline: none; }
+
+        /* Panel de Estadísticas (KPIs) */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .kpi-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); text-align: center; }
+        .kpi-label { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; }
+        .kpi-value { font-size: 22px; font-weight: 800; color: var(--primary); margin-top: 5px; }
+
+        /* Formulario Pro */
+        .form-section { background: var(--card-bg); padding: 25px; border-radius: 14px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        .form-title { font-size: 16px; font-weight: 700; margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; }
+        .input-group input { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; background: var(--card-bg); color: var(--text-color); outline: none; }
+        .input-group input:focus { border-color: var(--primary); }
+        
+        .btn-submit { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; transition: background 0.2s; width: 100%; }
+        .btn-submit:hover { background: #15803d; }
+
+        /* Tabla Estilizada */
+        .table-section { background: var(--card-bg); padding: 25px; border-radius: 14px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        .table-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .search-box { padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; width: 280px; background: var(--card-bg); color: var(--text-color); outline: none; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid var(--border-color); padding: 12px 15px; text-align: left; font-size: 13px; }
+        th { background-color: rgba(0,0,0,0.02); font-weight: 700; text-transform: uppercase; font-size: 11px; color: #64748b; }
+        tr:hover { background-color: rgba(0,0,0,0.01); }
+        
+        .btn-delete { background: #fee2e2; color: #dc2626; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+        .btn-delete:hover { background: #fecaca; }
+
+        #toast { position: fixed; bottom: 30px; right: 30px; background: #16a34a; color: white; padding: 14px 22px; border-radius: 10px; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; z-index: 1000; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- ENCABEZADO -->
+        <div class="header-section">
+            <h2 class="brand-title">👥 Módulo de Gestión de Clientes (CRM)</h2>
+            <div class="nav-actions">
+                <select id="themeSelector" class="theme-select" onchange="changeTheme()">
+                    <option value="theme-light">☀️ Modo Claro</option>
+                    <option value="theme-dark">🌙 Modo Oscuro</option>
+                    <option value="theme-neon">⚡ Cyberpunk Neon</option>
+                </select>
+                <a href="/menu" class="back-btn">← Volver al Panel Principal</a>
+            </div>
+        </div>
+
+        <!-- TARJETAS KPI (ESTADÍSTICAS RÁPIDAS) -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Clientes Registrados</div>
+                <div class="kpi-value">{{ clientes | length }}</div>
+            </div>
+            {% for rep in reporte %}
+            <div class="kpi-card">
+                <div class="kpi-label">Clientes en {{ rep.pais }}</div>
+                <div class="kpi-value" style="color: var(--success);">{{ rep.total }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- FORMULARIO REGISTRO -->
+        <div class="form-section">
+            <h3 class="form-title">➕ Registrar Nuevo Cliente en el Sistema</h3>
+            <form action="/cliente/agregar" method="POST" onsubmit="showToast('¡Cliente registrado con éxito!')">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Nombre Completo:</label>
+                        <input type="text" name="nombre" required placeholder="Ej. Ana María Gómez">
+                    </div>
+                    <div class="input-group">
+                        <label>Correo Electrónico:</label>
+                        <input type="email" name="email" required placeholder="ana@correo.com">
+                    </div>
+                    <div class="input-group">
+                        <label>Teléfono / Celular:</label>
+                        <input type="text" name="telefono" required placeholder="3101234567">
+                    </div>
+                    <div class="input-group">
+                        <label>Dirección de Residencia:</label>
+                        <input type="text" name="direccion" required placeholder="Calle 10 # 5-20">
+                    </div>
+                    <div class="input-group">
+                        <label>Ciudad:</label>
+                        <input type="text" name="ciudad" required placeholder="Villavicencio">
+                    </div>
+                    <div class="input-group">
+                        <label>País:</label>
+                        <input type="text" name="pais" required placeholder="Colombia">
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Guardar Registro de Cliente</button>
+            </form>
+        </div>
+
+        <!-- DIRECTORIO Y BUSCADOR -->
+        <div class="table-section">
+            <div class="table-header-flex">
+                <h3 style="margin:0; font-size: 16px;">📋 Directorio de Clientes Frecuentes</h3>
+                <input type="text" id="searchClient" class="search-box" placeholder="🔍 Buscar cliente por nombre o correo..." onkeyup="filterClients()">
+            </div>
+            <table id="clientTable">
+                <tr>
+                    <th>ID</th><th>Nombre</th><th>Correo Electrónico</th><th>Teléfono</th><th>Ciudad</th><th>País</th><th>Acciones</th>
+                </tr>
+                {% for cli in clientes %}
+                <tr class="client-row" data-text="{{ cli.nombre | lower }} {{ cli.email | lower }}">
+                    <td><strong>#{{ cli.id_cliente }}</strong></td>
+                    <td>{{ cli.nombre }}</td>
+                    <td>{{ cli.email }}</td>
+                    <td>{{ cli.telefono }}</td>
+                    <td>{{ cli.ciudad }}</td>
+                    <td>{{ cli.pais }}</td>
+                    <td>
+                        <a href="/cliente/eliminar/{{ cli.id_cliente }}" class="btn-delete" onclick="return confirm('¿Seguro que deseas eliminar este cliente?')">Eliminar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div id="toast">¡Operación exitosa!</div>
+
+    <script>
+        function showToast(message) {
+            let toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+
+        function filterClients() {
+            let input = document.getElementById('searchClient').value.toLowerCase();
+            let rows = document.getElementsByClassName('client-row');
+            for (let row of rows) {
+                let text = row.getAttribute('data-text');
+                row.style.display = text.includes(input) ? "" : "none";
+            }
+        }
+
+        function changeTheme() {
+            let theme = document.getElementById('themeSelector').value;
+            document.body.className = theme === 'theme-light' ? '' : theme;
+            localStorage.setItem('selectedTheme', theme);
+        }
+
+        let savedTheme = localStorage.getItem('selectedTheme') || 'theme-light';
+        document.getElementById('themeSelector').value = savedTheme;
+        document.body.className = savedTheme === 'theme-light' ? '' : savedTheme;
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.keyCode == 123 || (event.ctrlKey && event.shiftKey && (event.keyCode == 73 || event.keyCode == 74)) || (event.ctrlKey && event.keyCode == 85)) {
+                event.preventDefault();
+                alert("¡Acción bloqueada por políticas de seguridad del proyecto!");
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
